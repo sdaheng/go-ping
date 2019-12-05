@@ -156,9 +156,10 @@ type Pinger struct {
 }
 
 type packet struct {
-	bytes  []byte
-	nbytes int
-	ttl    int
+	bytes     []byte
+	nbytes    int
+	ttl       int
+	IsTimeout bool
 }
 
 // Packet represents a received and processed ICMP echo packet.
@@ -181,7 +182,6 @@ type Packet struct {
 	// TTL is the Time To Live on the packet.
 	Ttl int
 
-	// Packet is timeout
 	IsTimeout bool
 }
 
@@ -440,7 +440,7 @@ func (p *Pinger) recvICMP(
 				}
 			}
 
-			recv <- &packet{bytes: bytes, nbytes: n, ttl: ttl, isTimeout}
+			recv <- &packet{bytes: bytes, nbytes: n, ttl: ttl, IsTimeout: isTimeout}
 		}
 	}
 }
@@ -466,11 +466,11 @@ func (p *Pinger) processPacket(recv *packet) error {
 	}
 
 	outPkt := &Packet{
-		Nbytes: recv.nbytes,
-		IPAddr: p.ipaddr,
-		Addr:   p.addr,
-		Ttl:    recv.ttl,
-	}
+		Nbytes:    recv.nbytes,
+		IPAddr:    p.ipaddr,
+		Addr:      p.addr,
+		Ttl:       recv.ttl,
+		IsTimeout: recv.IsTimeout}
 
 	switch pkt := m.Body.(type) {
 	case *icmp.Echo:
