@@ -180,6 +180,9 @@ type Packet struct {
 
 	// TTL is the Time To Live on the packet.
 	Ttl int
+
+	// Packet is timeout
+	IsTimeout bool
 }
 
 // Statistics represent the stats of a currently running or finished
@@ -422,19 +425,22 @@ func (p *Pinger) recvICMP(
 					ttl = cm.HopLimit
 				}
 			}
+			isTimeout := false
 			if err != nil {
 				if neterr, ok := err.(*net.OpError); ok {
 					if neterr.Timeout() {
 						// Read timeout
+						isTimeout = true
 						continue
 					} else {
+						isTimeout = false
 						close(p.done)
 						return
 					}
 				}
 			}
 
-			recv <- &packet{bytes: bytes, nbytes: n, ttl: ttl}
+			recv <- &packet{bytes: bytes, nbytes: n, ttl: ttl, isTimeout}
 		}
 	}
 }
